@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="description" content="خزنة: شفّر رسائلك السرية مجاناً بمفتاح جديد لكل رسالة. كل شيء يتم داخل جهازك بدون تسجيل وبدون خوادم.">
+<meta name="theme-color" content="#080b10">
+<meta name="author" content="زهير">
+<meta name="copyright" content="© 2026 زهير. جميع الحقوق محفوظة.">
+<!--
+  خزنة (Khazna)  ©  2026  زهير.  جميع الحقوق محفوظة / All rights reserved.
+  لا يجوز نسخ هذا الكود أو تعديله أو إعادة نشره أو بيعه دون إذن كتابي من المالك.
+-->
+<title>خزنة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@500;600;700&display=swap">
+<style>
+  /* Layout: a vault that sells itself. Sticky nav with the Telegram contact button, a hero with a live
+     encryption demo over falling cipher glyphs, the working tool inside a glowing frame, then how it
+     works, the real spec sheet, and the developer contact block. */
+  @property --ang { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+  :root {
+    --ink: #070a0f;
+    --deep: #0b1017;
+    --panel: #101722;
+    --raise: #172133;
+    --line: #223147;
+    --text: #e9eef6;
+    --muted: #8b9ab0;
+    --brass: #e0b95a;
+    --brass-soft: rgba(224,185,90,.16);
+    --brass-ink: #1a1405;
+    --tg: #2aabee;
+    --ok: #5ed6a0;
+    --bad: #ff8080;
+    --display: "Reem Kufi", "Segoe UI", Tahoma, sans-serif;
+    --body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { background: var(--ink); scroll-behavior: smooth; scroll-padding-top: 84px; }
+  body {
+    margin: 0; background: var(--ink); color: var(--text); font-family: var(--body); font-size: 16px; line-height: 1.75;
+    -webkit-text-size-adjust: 100%; overflow-x: hidden;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 1120px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 32px); position: relative; z-index: 1; }
+
+  #rain { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: .5;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 30%, transparent 78%); mask-image: linear-gradient(to bottom, #000 0, #000 30%, transparent 78%); }
+  .aura { position: absolute; inset: 0 0 auto 0; height: 760px; z-index: 0; pointer-events: none;
+    background: radial-gradient(640px 420px at 78% 12%, rgba(224,185,90,.16), transparent 70%), radial-gradient(520px 360px at 12% 30%, rgba(42,171,238,.07), transparent 70%); }
+
+  /* nav */
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(7,10,15,.72); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(34,49,71,.7); }
+  .nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-block: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .mark { width: 36px; height: 36px; flex: none; }
+  .brand b { font-family: var(--display); font-size: 28px; line-height: 1; font-weight: 700; }
+  .links { display: flex; gap: 24px; font-size: 15px; }
+  .links a { color: var(--muted); text-decoration: none; }
+  .links a:hover { color: var(--text); }
+  @media (max-width: 760px) { .links { display: none; } }
+
+  .btn { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line); background: var(--raise); color: var(--text); font: 600 15px var(--body); padding: 11px 20px; border-radius: 12px; cursor: pointer; text-decoration: none; }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--brass); border-color: var(--brass); color: var(--brass-ink); font-size: 16px; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.tg { background: var(--tg); border-color: var(--tg); color: #04131c; }
+  .btn.tg:hover { filter: brightness(1.08); }
+  .btn.small { padding: 5px 14px; font-size: 13px; border-radius: 9px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
+  :is(a, button, textarea, input):focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+
+  /* hero */
+  .hero { position: relative; padding-block: clamp(36px, 7vw, 84px) clamp(30px, 5vw, 56px); }
+  .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(24px, 5vw, 56px); align-items: center; }
+  @media (max-width: 900px) { .hero .wrap { grid-template-columns: minmax(0, 1fr); } }
+  .badge { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: var(--brass); border: 1px solid rgba(224,185,90,.45); background: var(--brass-soft); border-radius: 999px; padding: 5px 16px; }
+  .badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px rgba(94,214,160,.18); }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(42px, 8.2vw, 88px); line-height: 1.08; margin: 18px 0 16px; letter-spacing: .005em; text-wrap: balance; }
+  h1 em { font-style: normal; color: var(--brass); }
+  .lead { font-size: clamp(17px, 2.3vw, 21px); color: #c3cddb; max-width: 40ch; margin: 0 0 26px; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .spec-line { margin: 26px 0 0; font: 500 12.5px var(--mono); color: var(--muted); direction: ltr; text-align: start; unicode-bidi: isolate; letter-spacing: .04em; }
+  .spec-line b { color: var(--brass); font-weight: 500; }
+
+  .demo { background: linear-gradient(180deg, rgba(23,33,51,.85), rgba(11,16,23,.92)); border: 1px solid var(--line); border-radius: 20px; padding: 18px; box-shadow: 0 30px 80px -30px rgba(0,0,0,.9), 0 0 0 1px rgba(224,185,90,.06); }
+  .demo-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; font-size: 12.5px; color: var(--muted); }
+  .demo-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+  .demo-bar i:first-child { background: var(--brass); }
+  .demo-bar span { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 6px; }
+  .demo-bar span::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: blink 1.6s infinite; }
+  .demo small { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }
+  .demo-plain { min-height: 3.6em; font-size: 18px; margin: 0; }
+  .demo-plain::after { content: "▌"; color: var(--brass); margin-inline-start: 2px; animation: blink 1s steps(2) infinite; }
+  .demo-mid { display: flex; align-items: center; gap: 12px; margin: 12px 0; color: var(--brass); font-size: 13px; }
+  .demo-mid::before, .demo-mid::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line), transparent); }
+  .demo-mid svg { width: 26px; height: 26px; }
+  .demo-cipher { display: block; font: 500 13px/1.6 var(--mono); color: var(--brass); direction: ltr; text-align: left; word-break: break-all; min-height: 5.2em; background: var(--deep); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .demo-note { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
+  @keyframes blink { 50% { opacity: .25; } }
+
+  /* sections */
+  section { position: relative; }
+  .sec { padding-block: clamp(36px, 6vw, 72px); }
+  .sec-head { margin-bottom: 26px; max-width: 60ch; }
+  .sec-head h2 { font-family: var(--display); font-size: clamp(28px, 4.6vw, 44px); line-height: 1.2; margin: 0 0 8px; font-weight: 700; }
+  .sec-head p { margin: 0; color: var(--muted); }
+
+  /* tool */
+  .glow { position: relative; border-radius: 22px; background: var(--panel); padding: clamp(14px, 3vw, 24px); }
+  .glow::before { content: ""; position: absolute; inset: 0; border-radius: 22px; padding: 1.5px; pointer-events: none;
+    background: conic-gradient(from var(--ang), rgba(34,49,71,.9) 0 55%, var(--brass) 78%, rgba(34,49,71,.9) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); animation: spin 7s linear infinite; }
+  @keyframes spin { to { --ang: 360deg; } }
+  .tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--deep); border: 1px solid var(--line); border-radius: 13px; margin-bottom: 16px; }
+  .tab { appearance: none; border: 0; background: transparent; color: var(--muted); font: 600 15px var(--body); padding: 9px 28px; border-radius: 10px; cursor: pointer; }
+  .tab[aria-selected="true"] { background: var(--brass); color: var(--brass-ink); }
+  .tab:not([aria-selected="true"]):hover { color: var(--text); background: var(--raise); }
+  @media (max-width: 560px) { .tabs { display: flex; } .tab { flex: 1; padding-inline: 12px; } }
+  .work { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .work { grid-template-columns: minmax(0, 1fr); } }
+  .pane { background: var(--deep); border: 1px solid var(--line); border-radius: 16px; padding: 18px; min-width: 0; }
+  .pane h3 { font-family: var(--display); font-weight: 600; font-size: 20px; margin: 0 0 14px; display: flex; align-items: center; gap: 10px; }
+  .tag { font: 500 12px var(--body); color: var(--brass); border: 1px solid var(--brass); border-radius: 6px; padding: 0 8px; }
+  .lockico { width: 26px; height: 26px; color: var(--brass); margin-inline-start: auto; }
+  .lockico .shackle { transform-origin: 16px 11px; transition: transform .45s cubic-bezier(.5,1.6,.5,1); transform: translateY(-3px) rotate(-26deg); }
+  .lockico.closed .shackle { transform: none; }
+  label { display: block; font-size: 14px; color: var(--muted); margin: 0 0 6px; }
+  textarea, input[type="text"] { width: 100%; background: var(--ink); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font: 400 16px/1.7 var(--body); resize: vertical; }
+  textarea { min-height: 190px; }
+  textarea.mono, input.mono { font-family: var(--mono); font-size: 14px; direction: ltr; text-align: left; }
+  input.mono { letter-spacing: .08em; text-transform: uppercase; }
+  .field + .field { margin-top: 14px; }
+  .meta { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .actions .primary { flex: 1 1 180px; }
+  .block + .block { margin-top: 18px; }
+  .block-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .block-head b { font-weight: 600; font-size: 15px; }
+  .block-head small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; }
+  .out { font-family: var(--mono); font-size: 13px; line-height: 1.6; direction: ltr; text-align: left; background: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; word-break: break-all; overflow-wrap: anywhere; max-height: 190px; overflow: auto; user-select: all; }
+  .out.key { font-size: 17px; color: var(--brass); letter-spacing: .1em; max-height: none; border-color: rgba(224,185,90,.45); }
+  .out.plain { font-family: var(--body); font-size: 17px; direction: auto; text-align: start; white-space: pre-wrap; user-select: text; max-height: 340px; }
+  .status { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; border-radius: 12px; padding: 10px 14px; margin-top: 16px; border: 1px solid var(--line); background: var(--ink); }
+  .status.ok { border-color: rgba(94,214,160,.5); color: var(--ok); }
+  .status.bad { border-color: rgba(255,128,128,.5); color: var(--bad); }
+  .empty { color: var(--muted); font-size: 15px; padding: 26px 4px; margin: 0; }
+  #nocrypto { margin-bottom: 14px; }
+
+  /* how */
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: s; }
+  @media (max-width: 800px) { .steps { grid-template-columns: minmax(0, 1fr); } }
+  .steps li { counter-increment: s; position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px 22px 22px; overflow: hidden; }
+  .steps li::before { content: counter(s); position: absolute; inset-block-start: -14px; inset-inline-end: 14px; font: 700 96px/1 var(--display); color: rgba(224,185,90,.10); }
+  .steps b { display: block; font-family: var(--display); font-size: 22px; margin-bottom: 6px; font-weight: 600; position: relative; }
+  .steps p { margin: 0; color: var(--muted); font-size: 15px; position: relative; }
+
+  /* specs */
+  .specs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; margin: 0; }
+  @media (max-width: 760px) { .specs { grid-template-columns: minmax(0, 1fr); } }
+  .specs div { display: flex; justify-content: space-between; gap: 18px; padding: 14px 0; border-top: 1px solid var(--line); }
+  .specs dt { color: var(--muted); font-size: 15px; }
+  .specs dd { margin: 0; font-weight: 600; text-align: end; min-width: 0; }
+  .specs dd.mono { font-family: var(--mono); font-weight: 500; font-size: 14px; color: var(--brass); direction: ltr; unicode-bidi: isolate; }
+
+  /* contact */
+  .contact { position: relative; overflow: hidden; border: 1px solid rgba(42,171,238,.4); border-radius: 24px; padding: clamp(24px, 5vw, 48px); background: radial-gradient(520px 260px at 90% 0%, rgba(42,171,238,.16), transparent 70%), var(--panel); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; }
+  @media (max-width: 760px) { .contact { grid-template-columns: minmax(0, 1fr); } }
+  .contact h2 { font-family: var(--display); font-size: clamp(26px, 4.2vw, 40px); line-height: 1.2; margin: 0 0 8px; }
+  .contact p { margin: 0; color: #b6c3d4; max-width: 46ch; }
+  .contact .btn { font-size: 17px; padding: 15px 30px; }
+
+  .foot { padding-block: 26px 90px; border-top: 1px solid var(--line); margin-top: 24px; }
+  .foot .wrap { display: flex; justify-content: space-between; gap: 10px 24px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+  .foot-links { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .link { appearance: none; background: none; border: 0; padding: 0; color: var(--brass); font: 600 13px var(--body); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .foot a.link { text-decoration: underline; }
+  .credits { flex-basis: 100%; font-size: 12px; }
+
+  .fab { position: fixed; inset-block-end: max(16px, env(safe-area-inset-bottom)); inset-inline-start: 16px; z-index: 30; display: inline-flex; align-items: center; gap: 8px; background: var(--tg); color: #04131c; font: 600 14px var(--body); text-decoration: none; padding: 11px 18px; border-radius: 999px; box-shadow: 0 10px 30px -8px rgba(42,171,238,.65); }
+  .fab svg { width: 20px; height: 20px; fill: currentColor; }
+  .fab:hover { filter: brightness(1.08); }
+
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 18px; padding: 24px; width: min(560px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; }
+  dialog::backdrop { background: rgba(4,6,10,.75); }
+  dialog h2 { font-family: var(--display); font-size: 24px; margin: 0 0 4px; }
+  dialog h3 { font-size: 15px; margin: 16px 0 2px; color: var(--brass); }
+  dialog p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  dialog .btn { margin-top: 20px; width: 100%; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-copy > * { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
+    .hero-copy > :nth-child(2) { animation-delay: .08s; } .hero-copy > :nth-child(3) { animation-delay: .16s; }
+    .hero-copy > :nth-child(4) { animation-delay: .24s; } .hero-copy > :nth-child(5) { animation-delay: .32s; }
+    .demo { animation: rise .8s .2s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+  }
+  @media (prefers-reduced-motion: reduce) { .glow::before { animation: none; } .demo-plain::after, .demo-bar span::before { animation: none; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<canvas id="rain" aria-hidden="true"></canvas>
+<div class="aura" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="خزنة">
+      <svg class="mark" viewBox="0 0 48 48" aria-hidden="true"><rect x="2" y="2" width="44" height="44" rx="12" fill="#101722" stroke="#e0b95a" stroke-width="2"/><circle cx="24" cy="20" r="6.5" fill="none" stroke="#e0b95a" stroke-width="3"/><path d="M24 26.5V37M24 32h5M24 36h3.5" fill="none" stroke="#e0b95a" stroke-width="3" stroke-linecap="round"/></svg>
+      <b>خزنة</b>
+    </a>
+    <nav class="links" aria-label="الأقسام"><a href="#tool">الأداة</a><a href="#how">كيف تعمل</a><a href="#security">الأمان</a><a href="#contact">تواصل</a></nav>
+    <a class="btn tg small" href="https://t.me/ygdbjjis" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 3.4 2.9 10.6c-1 .4-1 1.1-.2 1.3l4.7 1.5 1.8 5.6c.2.6.4.8.9.8s.6-.2.9-.4l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8L23 4.7c.2-1.2-.5-1.7-1.4-1.3ZM9.5 13.3l9-5.7c.4-.3.8-.1.5.2l-7.4 6.7-.3 3.2-1.8-4.4Z"/></svg>
+      تواصل مع المطور
+    </a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="badge"><i></i>مجاني بالكامل · بدون تسجيل</span>
+        <h1>اقفل رسالتك بمفتاح <em>لا يتكرر</em></h1>
+        <p class="lead">اكتب سرّك، فتُقفل الرسالة بمفتاح جديد خاص بها وحدها. من لا يملك المفتاح لا يقرأ شيئاً، حتى الذكاء الصناعي.</p>
+        <div class="cta">
+          <a class="btn primary" href="#tool">ابدأ التشفير الآن</a>
+          <a class="btn" href="#how">كيف تعمل؟</a>
+        </div>
+        <p class="spec-line"><b>AES-256-GCM</b> · HKDF-SHA256 · 160-bit key per message · 0 servers</p>
+      </div>
+
+      <div class="demo" aria-label="مثال حي على التشفير">
+        <div class="demo-bar"><i></i><i></i><i></i><span>مثال حي</span></div>
+        <small>الرسالة</small>
+        <p class="demo-plain" id="d-plain">نلتقي الخميس الساعة ٧ عند المكان المعتاد</p>
+        <div class="demo-mid">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor" fill-opacity=".15"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          تُشفَّر هنا في جهازك
+        </div>
+        <small>بعد التشفير</small>
+        <code class="demo-cipher" id="d-cipher">KZ1.</code>
+        <p class="demo-note">هذا نص مشفر حقيقي يُولَّد الآن بمفتاح عشوائي، ولا يُحفظ في أي مكان.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="tool">
+    <div class="wrap">
+      <div class="sec-head"><h2>شفّر وافتح رسائلك</h2><p>اكتب الرسالة واضغط شفّر. ستحصل على نص مشفر ومفتاح، وترسلهما بقناتين مختلفتين.</p></div>
+      <div class="glow">
+        <div class="status bad" id="nocrypto" hidden>هذا المتصفح لا يسمح بالتشفير هنا. افتح الموقع بمتصفح Chrome أو Safari عبر رابط https.</div>
+        <div class="tabs" role="tablist" aria-label="الوضع">
+          <button class="tab" role="tab" id="tab-enc" aria-selected="true" aria-controls="p-enc" type="button">تشفير</button>
+          <button class="tab" role="tab" id="tab-dec" aria-selected="false" aria-controls="p-dec" type="button">فك التشفير</button>
+        </div>
+
+        <div id="p-enc" role="tabpanel" aria-labelledby="tab-enc">
+          <div class="work">
+            <div class="pane">
+              <h3>رسالتك</h3>
+              <div class="field">
+                <label for="msg">النص السري</label>
+                <textarea id="msg" spellcheck="false" maxlength="20000">نلتقي الخميس الساعة ٧ مساءً عند المكان المعتاد. لا تذكر هذا لأحد.</textarea>
+                <div class="meta"><span id="count">0 حرف</span><span>الحد الأقصى 20000</span></div>
+              </div>
+              <div class="actions">
+                <button class="btn primary" id="go-enc" type="button">شفّر الرسالة</button>
+                <button class="btn" id="clear-enc" type="button">مسح</button>
+              </div>
+            </div>
+            <div class="pane" aria-live="polite">
+              <h3>النتيجة <span class="tag" id="example-tag">مثال</span>
+                <svg class="lockico" id="lockico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor" fill-opacity=".18"/><path class="shackle" d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+              </h3>
+              <div class="block">
+                <div class="block-head"><div><b>الرسالة المشفرة</b><small>هذه تُرسل للشخص</small></div><button class="btn small" data-copy="packet" type="button">نسخ</button></div>
+                <div class="out" id="packet" tabindex="0"></div>
+              </div>
+              <div class="block">
+                <div class="block-head"><div><b>مفتاح هذه الرسالة</b><small>أرسله من قناة مختلفة، مثل مكالمة</small></div><button class="btn small" data-copy="key" type="button">نسخ</button></div>
+                <div class="out key" id="keyout" tabindex="0"></div>
+              </div>
+              <div class="status ok" id="verify">تم التحقق: فُكّت الرسالة تلقائياً وطابقت الأصل حرفاً بحرف.</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="p-dec" role="tabpanel" aria-labelledby="tab-dec" hidden>
+          <div class="work">
+            <div class="pane">
+              <h3>ما وصلك</h3>
+              <div class="field">
+                <label for="in-packet">الرسالة المشفرة</label>
+                <textarea id="in-packet" class="mono" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="KZ1.…~" style="min-height:130px"></textarea>
+              </div>
+              <div class="field">
+                <label for="in-key">المفتاح</label>
+                <input id="in-key" type="text" class="mono" spellcheck="false" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX-XXXX-…">
+              </div>
+              <div class="actions">
+                <button class="btn primary" id="go-dec" type="button">افتح الرسالة</button>
+                <button class="btn" id="clear-dec" type="button">مسح</button>
+              </div>
+            </div>
+            <div class="pane" aria-live="polite">
+              <h3>الرسالة</h3>
+              <div id="dec-result"><p class="empty">الصق الرسالة المشفرة والمفتاح، ثم اضغط «افتح الرسالة».</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="how">
+    <div class="wrap">
+      <div class="sec-head"><h2>ثلاث خطوات فقط</h2><p>بدون حساب، بدون تثبيت، وبدون أن تثق بأحد.</p></div>
+      <ol class="steps">
+        <li><b>اكتب رسالتك</b><p>أي نص بأي لغة، عربي أو إنجليزي أو إيموجي، حتى 20 ألف حرف.</p></li>
+        <li><b>شفّرها</b><p>يولّد الموقع مفتاحاً عشوائياً جديداً ويقفل الرسالة به، ثم يفتحها تلقائياً للتأكد أنها سليمة.</p></li>
+        <li><b>أرسل بقناتين</b><p>الرسالة المشفرة بقناة، والمفتاح بقناة أخرى. الشخص يلصقهما في تبويب «فك التشفير».</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="sec" id="security">
+    <div class="wrap">
+      <div class="sec-head"><h2>الأمان بالأرقام</h2><p>هذه المواصفات الفعلية لما يعمل داخل الصفحة، بلا مبالغة.</p></div>
+      <dl class="specs">
+        <div><dt>التشفير</dt><dd class="mono">AES-256-GCM</dd></div>
+        <div><dt>اشتقاق المفتاح</dt><dd class="mono">HKDF-SHA256</dd></div>
+        <div><dt>طول المفتاح</dt><dd>160 بت عشوائي لكل رسالة</dd></div>
+        <div><dt>اكتشاف التلاعب</dt><dd>أي حرف يتغير يوقف الفتح</dd></div>
+        <div><dt>إخفاء الطول</dt><dd>حشو إلى مضاعفات 64 بايت</dd></div>
+        <div><dt>الخوادم والتخزين</dt><dd>لا شيء، كله داخل جهازك</dd></div>
+        <div><dt>الحسابات والتتبع</dt><dd>بدون حسابات ولا كوكيز</dd></div>
+        <div><dt>السعر</dt><dd>مجاني</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="sec" id="contact">
+    <div class="wrap">
+      <div class="contact">
+        <div>
+          <h2>عندك فكرة أو مشكلة؟</h2>
+          <p>تواصل مع المطور مباشرة على قناة تلكرام. اكتب ملاحظتك أو اقتراحك أو أي استفسار.</p>
+        </div>
+        <a class="btn tg" href="https://t.me/ygdbjjis" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 3.4 2.9 10.6c-1 .4-1 1.1-.2 1.3l4.7 1.5 1.8 5.6c.2.6.4.8.9.8s.6-.2.9-.4l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8L23 4.7c.2-1.2-.5-1.7-1.4-1.3ZM9.5 13.3l9-5.7c.4-.3.8-.1.5.2l-7.4 6.7-.3 3.2-1.8-4.4Z"/></svg>
+          تواصل مع المطور
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div>© 2026 زهير. جميع الحقوق محفوظة.</div>
+    <div class="foot-links">
+      <button class="link" id="open-terms" type="button">الشروط والحقوق</button>
+      <a class="link" href="https://t.me/ygdbjjis" target="_blank" rel="noopener noreferrer">قناة المطور على تلكرام</a>
+    </div>
+    <div class="credits">الخطوط: Reem Kufi وIBM Plex، برخصة SIL Open Font License.</div>
+  </div>
+</footer>
+
+<a class="fab" href="https://t.me/ygdbjjis" target="_blank" rel="noopener noreferrer" aria-label="تواصل مع المطور على تلكرام">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 3.4 2.9 10.6c-1 .4-1 1.1-.2 1.3l4.7 1.5 1.8 5.6c.2.6.4.8.9.8s.6-.2.9-.4l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8L23 4.7c.2-1.2-.5-1.7-1.4-1.3ZM9.5 13.3l9-5.7c.4-.3.8-.1.5.2l-7.4 6.7-.3 3.2-1.8 6.7-.3 3.2-1.8-4.4Z"/></svg>
+  تواصل مع المطور
+</a>
+
+<dialog id="terms" aria-labelledby="terms-title">
+  <h2 id="terms-title">الشروط والحقوق</h2>
+  <p>آخر تحديث: 2026-10-06</p>
+  <h3>الاستخدام</h3>
+  <p>خزنة أداة مجانية لتشفير الرسائل الخاصة. يُسمح باستخدامها لأغراض مشروعة فقط، ويُمنع استخدامها في أي نشاط مخالف للقانون.</p>
+  <h3>الخصوصية</h3>
+  <p>لا يجمع الموقع أي بيانات ولا يتتبعك ولا يحفظ رسائلك أو مفاتيحك. التشفير يتم بالكامل داخل جهازك.</p>
+  <h3>المفاتيح والمسؤولية</h3>
+  <p>المفتاح لا يُسترجع إذا ضاع. يُقدَّم الموقع كما هو دون ضمان، ولا يتحمل المالك مسؤولية فقدان الرسائل أو سوء استخدام المفاتيح.</p>
+  <h3>الملكية</h3>
+  <p>تصميم الموقع وكوده وشعاره ونصوصه ملك للمالك © 2026 زهير، وجميع الحقوق محفوظة. لا يجوز نسخها أو تعديلها أو إعادة نشرها أو بيعها دون إذن كتابي مسبق.</p>
+  <form method="dialog"><button class="btn primary">حسناً</button></form>
+</dialog>
+
+<script>
+// ===== CORE-START =====
+const B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+const AAD = new TextEncoder().encode("KZ1");
+class KZError extends Error { constructor(code) { super(code); this.code = code; } }
+
+function b32enc(bytes) {
+  let bits = 0, acc = 0, out = "";
+  for (const b of bytes) { acc = (acc << 8) | b; bits += 8; while (bits >= 5) { out += B32[(acc >> (bits - 5)) & 31]; bits -= 5; } acc &= (1 << bits) - 1; }
+  if (bits > 0) out += B32[(acc << (5 - bits)) & 31];
+  return out;
+}
+function b32dec(str) {
+  let bits = 0, acc = 0; const out = [];
+  for (const ch of str) { acc = (acc << 5) | B32.indexOf(ch); bits += 5; if (bits >= 8) { out.push((acc >> (bits - 8)) & 255); bits -= 8; acc &= (1 << bits) - 1; } }
+  return new Uint8Array(out);
+}
+function b64u(bytes) { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+function unb64u(str) { const s = str.replace(/-/g, "+").replace(/_/g, "/"); const pad = s + "=".repeat((4 - (s.length % 4)) % 4); const bin = atob(pad); const out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+
+async function checksum(raw) {
+  const h = new Uint8Array(await crypto.subtle.digest("SHA-256", raw));
+  const v = (h[0] << 2) | (h[1] >> 6);
+  return B32[v >> 5] + B32[v & 31];
+}
+function groupKey(s) { return s.match(/.{1,4}/g).join("-"); }
+async function makeKey() {
+  const raw = crypto.getRandomValues(new Uint8Array(20));
+  return groupKey(b32enc(raw) + (await checksum(raw)));
+}
+function normKey(s) {
+  return s.replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660))
+          .replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x06F0))
+          .toUpperCase().replace(/[^0-9A-Z]/g, "")
+          .replace(/O/g, "0").replace(/[IL]/g, "1");
+}
+async function parseKey(s) {
+  const n = normKey(s);
+  if (n.length !== 34) throw new KZError("keylen");
+  for (const ch of n) if (B32.indexOf(ch) < 0) throw new KZError("keychar");
+  const raw = b32dec(n.slice(0, 32));
+  if ((await checksum(raw)) !== n.slice(32)) throw new KZError("keysum");
+  return raw;
+}
+async function deriveAes(raw, salt) {
+  const base = await crypto.subtle.importKey("raw", raw, "HKDF", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "HKDF", hash: "SHA-256", salt, info: new TextEncoder().encode("khazna-v1") },
+    base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function encryptRaw(text, keyStr) {
+  const raw = await parseKey(keyStr);
+  const data = new TextEncoder().encode(text);
+  const total = Math.max(64, Math.ceil((4 + data.length) / 64) * 64);
+  const pt = new Uint8Array(total);
+  new DataView(pt.buffer).setUint32(0, data.length);
+  pt.set(data, 4);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const aes = await deriveAes(raw, salt);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: AAD }, aes, pt));
+  const all = new Uint8Array(16 + 12 + ct.length);
+  all.set(salt, 0); all.set(iv, 16); all.set(ct, 28);
+  return "KZ1." + b64u(all) + "~";
+}
+function extractPacket(input) {
+  const i = input.indexOf("KZ1.");
+  if (i < 0) throw new KZError("nopacket");
+  let rest = input.slice(i + 4);
+  const end = rest.indexOf("~");
+  if (end >= 0) rest = rest.slice(0, end);
+  const body = rest.replace(/\s+/g, "");
+  if (!/^[A-Za-z0-9_-]+$/.test(body)) throw new KZError("badpacket");
+  return body;
+}
+async function decryptPacket(input, keyStr) {
+  const body = extractPacket(input);
+  let all;
+  try { all = unb64u(body); } catch { throw new KZError("badpacket"); }
+  if (all.length < 16 + 12 + 16 + 64) throw new KZError("short");
+  const raw = await parseKey(keyStr);
+  const aes = await deriveAes(raw, all.slice(0, 16));
+  let pt;
+  try { pt = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: all.slice(16, 28), additionalData: AAD }, aes, all.slice(28))); }
+  catch { throw new KZError("auth"); }
+  const len = new DataView(pt.buffer, pt.byteOffset).getUint32(0);
+  if (len > pt.length - 4) throw new KZError("auth");
+  try { return new TextDecoder("utf-8", { fatal: true }).decode(pt.slice(4, 4 + len)); }
+  catch { throw new KZError("auth"); }
+}
+async function encryptMessage(text) {
+  const key = await makeKey();
+  const packet = await encryptRaw(text, key);
+  const back = await decryptPacket(packet, key);
+  if (back !== text) throw new KZError("selftest");
+  return { key, packet };
+}
+// ===== CORE-END =====
+
+if (typeof document !== "undefined") {
+  const $ = id => document.getElementById(id);
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const hasCrypto = !!(window.crypto && crypto.subtle);
+  if (!hasCrypto) { $("nocrypto").hidden = false; $("go-enc").disabled = true; $("go-dec").disabled = true; }
+
+  const MSG = {
+    keylen: "المفتاح ناقص أو زائد. يجب أن يكون 34 خانة (حروف وأرقام).",
+    keychar: "في المفتاح حرف غير مسموح. المسموح الأرقام والحروف الإنجليزية فقط.",
+    keysum: "المفتاح فيه خطأ طباعة. راجع الحروف والأرقام وقارنها بالأصل.",
+    nopacket: "لم أجد رسالة مشفرة. يجب أن تبدأ بـ KZ1.",
+    badpacket: "الرسالة المشفرة تالفة أو مقطوعة. انسخها كاملة من البداية KZ1. إلى النهاية ~",
+    short: "الرسالة المشفرة قصيرة جداً، غالباً نُسخت ناقصة.",
+    auth: "المفتاح لا يطابق هذه الرسالة، أو أن الرسالة تغيّرت. لم يُفتح شيء.",
+    selftest: "فشل التحقق الداخلي. لم تُعرض أي نتيجة، حاول مرة أخرى."
+  };
+  let current = { key: "", packet: "" };
+
+  // tabs
+  function showTab(which) {
+    const enc = which === "enc";
+    $("tab-enc").setAttribute("aria-selected", enc); $("tab-dec").setAttribute("aria-selected", !enc);
+    $("p-enc").hidden = !enc; $("p-dec").hidden = enc;
+  }
+  $("tab-enc").onclick = () => showTab("enc"); $("tab-dec").onclick = () => showTab("dec");
+
+  // copy with fallback
+  function selectEl(el) { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  async function copy(el, text, btn) {
+    const old = btn.textContent;
+    try { await navigator.clipboard.writeText(text); btn.textContent = "تم النسخ"; }
+    catch { selectEl(el); btn.textContent = "حدّد، ثم انسخ"; }
+    setTimeout(() => btn.textContent = old, 1600);
+  }
+  document.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => {
+    const k = b.dataset.copy; copy($(k === "key" ? "keyout" : "packet"), current[k], b);
+  });
+
+  // scramble reveal (one frame loop per element)
+  const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  const rafs = new WeakMap();
+  function reveal(el, final, dur = 750) {
+    cancelAnimationFrame(rafs.get(el));
+    if (reduce) { el.textContent = final; return; }
+    const t0 = performance.now();
+    (function step(now) {
+      const p = Math.min(1, (now - t0) / dur), n = Math.floor(p * final.length);
+      let s = final.slice(0, n);
+      for (let i = n; i < final.length; i++) s += final[i] === "-" && final.length < 60 ? "-" : ALPHA[(Math.random() * ALPHA.length) | 0];
+      el.textContent = s;
+      if (p < 1) rafs.set(el, requestAnimationFrame(step)); else el.textContent = final;
+    })(t0);
+  }
+
+  function setStatus(el, ok, text) { el.className = "status " + (ok ? "ok" : "bad"); el.textContent = text; }
+
+  const msg = $("msg");
+  const updateCount = () => $("count").textContent = msg.value.length.toLocaleString("ar") + " حرف";
+  msg.addEventListener("input", updateCount); updateCount();
+  let first = true;
+  msg.addEventListener("focus", () => { if (first && msg.value.startsWith("نلتقي الخميس")) msg.select(); first = false; });
+
+  async function runEncrypt(isExample) {
+    const text = msg.value;
+    const v = $("verify");
+    if (!hasCrypto) return;
+    if (!text.trim()) { setStatus(v, false, "اكتب رسالة أولاً."); return; }
+    $("go-enc").disabled = true;
+    $("lockico").classList.remove("closed");
+    try {
+      const r = await encryptMessage(text);
+      current = r;
+      reveal($("packet"), r.packet);
+      reveal($("keyout"), r.key);
+      $("example-tag").hidden = !isExample;
+      $("lockico").classList.add("closed");
+      setStatus(v, true, "تم التحقق: فُكّت الرسالة تلقائياً وطابقت الأصل حرفاً بحرف.");
+    } catch (e) { setStatus(v, false, MSG[e.code] || "حدث خطأ غير متوقع. حاول مرة أخرى."); }
+    $("go-enc").disabled = false;
+  }
+  $("go-enc").onclick = () => runEncrypt(false);
+  $("clear-enc").onclick = () => { msg.value = ""; updateCount(); msg.focus(); };
+
+  $("go-dec").onclick = async () => {
+    const box = $("dec-result");
+    try {
+      const text = await decryptPacket($("in-packet").value, $("in-key").value);
+      box.innerHTML = "";
+      const st = document.createElement("div"); st.className = "status ok"; st.style.marginTop = "0"; st.textContent = "تم الفتح. المفتاح صحيح والرسالة سليمة.";
+      const head = document.createElement("div"); head.className = "block-head"; head.style.marginTop = "16px";
+      const b = document.createElement("b"); b.textContent = "النص الأصلي";
+      const cb = document.createElement("button"); cb.className = "btn small"; cb.type = "button"; cb.textContent = "نسخ";
+      head.append(b, cb);
+      const out = document.createElement("div"); out.className = "out plain"; out.textContent = text;
+      cb.onclick = () => copy(out, text, cb);
+      box.append(st, head, out);
+    } catch (e) {
+      box.innerHTML = "";
+      const st = document.createElement("div"); st.className = "status bad"; st.style.marginTop = "0";
+      st.textContent = MSG[e.code] || "حدث خطأ غير متوقع. تأكد من النسخ وحاول مرة أخرى.";
+      box.append(st);
+    }
+  };
+  $("clear-dec").onclick = () => { $("in-packet").value = ""; $("in-key").value = ""; $("dec-result").innerHTML = '<p class="empty">الصق الرسالة المشفرة والمفتاح، ثم اضغط «افتح الرسالة».</p>'; };
+
+  // terms dialog
+  const dlg = $("terms");
+  $("open-terms").onclick = () => dlg.showModal();
+  dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+
+  // hero demo: a real encryption each cycle
+  const SAMPLES = ["نلتقي الخميس الساعة ٧ عند المكان المعتاد", "كلمة السر الجديدة وصلتك على المكالمة", "لا تذكر هذا لأحد، سأشرح لك لاحقاً"];
+  const dPlain = $("d-plain"), dCipher = $("d-cipher");
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  async function demoLoop() {
+    let i = 0;
+    for (;;) {
+      const text = SAMPLES[i++ % SAMPLES.length];
+      try {
+        const { packet } = await encryptMessage(text);
+        const shown = packet.slice(0, 110) + "…";
+        if (reduce) { dPlain.textContent = text; dCipher.textContent = shown; return; }
+        dPlain.textContent = "";
+        for (let k = 1; k <= text.length; k++) { dPlain.textContent = text.slice(0, k); await sleep(32); }
+        await sleep(450);
+        reveal(dCipher, shown, 900);
+      } catch { return; }
+      await sleep(4200);
+    }
+  }
+  if (hasCrypto) demoLoop(); else dCipher.textContent = "KZ1.………";
+
+  // cipher rain
+  const cv = $("rain"), cx = cv.getContext("2d");
+  if (!reduce && cx) {
+    const GL = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+    let W = 0, H = 0, cols = [], last = 0;
+    const fs = 15;
+    const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight; cols = Array.from({ length: Math.ceil(W / fs) }, () => Math.random() * -40); cx.fillStyle = "#070a0f"; cx.fillRect(0, 0, W, H); cx.font = fs + "px 'IBM Plex Mono', monospace"; };
+    size(); addEventListener("resize", size);
+    (function draw(t) {
+      if (t - last > 70 && !document.hidden) {
+        last = t;
+        cx.fillStyle = "rgba(7,10,15,.14)"; cx.fillRect(0, 0, W, H);
+        for (let c = 0; c < cols.length; c++) {
+          const y = cols[c] * fs;
+          if (y > 0) { cx.fillStyle = Math.random() > .96 ? "rgba(255,236,190,.9)" : "rgba(224,185,90,.55)"; cx.fillText(GL[(Math.random() * GL.length) | 0], c * fs, y); }
+          cols[c] = y > H && Math.random() > .975 ? Math.random() * -20 : cols[c] + 1;
+        }
+      }
+      requestAnimationFrame(draw);
+    })(0);
+  } else if (cv) { cv.style.display = "none"; }
+
+  runEncrypt(true);
+}
+</script>
+</body>
+</html>
